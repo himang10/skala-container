@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout('사용자 관리', ~{::section})}">
+<head><title>사용자 관리</title></head>
+<body>
+<section>
+  <div class="page-header d-flex justify-content-between align-items-center">
+    <div>
+      <h2><i class="bi bi-people me-2"></i>사용자 관리</h2>
+      <p class="text-muted mb-0">전체 <span class="fw-bold text-primary" th:text="${#lists.size(users)}">0</span>명의 사용자</p>
+    </div>
+    <a th:href="@{/web/users/new}" class="btn btn-primary">
+      <i class="bi bi-person-plus me-1"></i>사용자 등록
+    </a>
+  </div>
+
+  <div class="card">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr>
+              <th style="width:80px;">ID</th>
+              <th>이름</th>
+              <th>이메일</th>
+              <th style="width:160px;" class="text-center">작업</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:if="${#lists.isEmpty(users)}">
+              <td colspan="4" class="text-center text-muted py-5">
+                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                등록된 사용자가 없습니다.
+              </td>
+            </tr>
+            <tr th:each="user : ${users}">
+              <td><span class="badge bg-secondary" th:text="${user.id}"></span></td>
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center text-white fw-bold"
+                       style="width:32px;height:32px;font-size:.8rem;"
+                       th:text="${user.name.substring(0,1)}">U</div>
+                  <span class="fw-semibold" th:text="${user.name}">-</span>
+                </div>
+              </td>
+              <td><span class="text-muted" th:text="${user.email}">-</span></td>
+              <td class="text-center">
+                <a th:href="@{/web/users/{id}/edit(id=${user.id})}"
+                   class="btn btn-sm btn-outline-primary me-1">
+                  <i class="bi bi-pencil"></i> 수정
+                </a>
+                <form th:action="@{/web/users/{id}/delete(id=${user.id})}"
+                      method="post" class="d-inline"
+                      onsubmit="return confirm('정말 삭제하시겠습니까?')">
+                  <button type="submit" class="btn btn-sm btn-outline-danger">
+                    <i class="bi bi-trash"></i> 삭제
+                  </button>
+                </form>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+</body>
+</html>

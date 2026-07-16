@@ -1,0 +1,27 @@
+server:
+  port: 8080
+
+developer:
+  owner:
+    name: yona
+    role: backend
+    level: middle
+  team:
+    position: "4th floor"
+    detail: "class 4"
+
+# MariaDB 설정
+spring:
+  datasource:
+    url: jdbc:mariadb://mariadb:3306/skala
+    driver-class-name: org.mariadb.jdbc.Driver
+    username: user
+    password: password
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    defer-datasource-initialization: true
+  sql:
+    init:
+      mode: always

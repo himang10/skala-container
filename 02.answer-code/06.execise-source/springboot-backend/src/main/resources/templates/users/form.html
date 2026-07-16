@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout('사용자 등록/수정', ~{::section})}">
+<head><title>사용자 폼</title></head>
+<body>
+<section>
+  <div class="page-header">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a th:href="@{/web/users}">사용자 관리</a></li>
+        <li class="breadcrumb-item active" th:text="${isNew} ? '신규 등록' : '정보 수정'"></li>
+      </ol>
+    </nav>
+    <h2 th:text="${isNew} ? '사용자 등록' : '사용자 정보 수정'">
+      <i class="bi bi-person me-2"></i>사용자 폼
+    </h2>
+  </div>
+
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header bg-white py-3">
+          <h5 class="mb-0">
+            <i class="bi bi-person-fill me-2 text-primary"></i>
+            <span th:text="${isNew} ? '새 사용자 정보 입력' : '사용자 정보 수정'">사용자 정보</span>
+          </h5>
+        </div>
+        <div class="card-body p-4">
+          <form th:action="${isNew} ? @{/web/users} : @{/web/users/{id}(id=${userId})}"
+                th:method="${isNew} ? 'post' : 'post'">
+            <!-- PUT 오버라이드 (수정 시) -->
+            <input th:if="${!isNew}" type="hidden" name="_method" value="put"/>
+
+            <div class="mb-4">
+              <label class="form-label fw-semibold" for="name">
+                이름 <span class="text-danger">*</span>
+              </label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-person"></i></span>
+                <input type="text" id="name" name="name" class="form-control"
+                       th:value="${user?.name}" placeholder="홍길동" required maxlength="50"/>
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <label class="form-label fw-semibold" for="email">
+                이메일 <span class="text-danger">*</span>
+              </label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                <input type="email" id="email" name="email" class="form-control"
+                       th:value="${user?.email}" placeholder="example@email.com" required/>
+              </div>
+            </div>
+
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-primary flex-grow-1">
+                <i class="bi bi-check-circle me-1"></i>
+                <span th:text="${isNew} ? '등록' : '저장'">저장</span>
+              </button>
+              <a th:href="@{/web/users}" class="btn btn-outline-secondary flex-grow-1">
+                <i class="bi bi-x-circle me-1"></i>취소
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+</body>
+</html>

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout('대시보드', ~{::section})}">
+<head><title>대시보드</title></head>
+<body>
+<section>
+  <div class="page-header d-flex justify-content-between align-items-center">
+    <div>
+      <h2><i class="bi bi-house me-2"></i>대시보드</h2>
+      <p class="text-muted mb-0">SK Skala 쇼핑몰 관리 현황</p>
+    </div>
+  </div>
+
+  <!-- 통계 카드 -->
+  <div class="row g-4 mb-4">
+    <div class="col-md-3">
+      <div class="card stat-card stat-card-blue p-3">
+        <div class="d-flex align-items-center">
+          <div class="flex-grow-1">
+            <div class="text-muted small">전체 사용자</div>
+            <div class="fs-2 fw-bold text-primary" th:text="${userCount}">0</div>
+          </div>
+          <i class="bi bi-people fs-1 text-primary opacity-25"></i>
+        </div>
+        <a th:href="@{/web/users}" class="text-decoration-none small text-muted mt-2 d-block">
+          관리하기 <i class="bi bi-arrow-right"></i>
+        </a>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card stat-card stat-card-green p-3">
+        <div class="d-flex align-items-center">
+          <div class="flex-grow-1">
+            <div class="text-muted small">전체 카테고리</div>
+            <div class="fs-2 fw-bold text-success" th:text="${categoryCount}">0</div>
+          </div>
+          <i class="bi bi-grid fs-1 text-success opacity-25"></i>
+        </div>
+        <a th:href="@{/web/categories}" class="text-decoration-none small text-muted mt-2 d-block">
+          관리하기 <i class="bi bi-arrow-right"></i>
+        </a>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card stat-card stat-card-orange p-3">
+        <div class="d-flex align-items-center">
+          <div class="flex-grow-1">
+            <div class="text-muted small">전체 주문</div>
+            <div class="fs-2 fw-bold text-warning" th:text="${orderCount}">0</div>
+          </div>
+          <i class="bi bi-bag fs-1 text-warning opacity-25"></i>
+        </div>
+        <a th:href="@{/web/orders}" class="text-decoration-none small text-muted mt-2 d-block">
+          관리하기 <i class="bi bi-arrow-right"></i>
+        </a>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card stat-card stat-card-red p-3">
+        <div class="d-flex align-items-center">
+          <div class="flex-grow-1">
+            <div class="text-muted small">대기 중 주문</div>
+            <div class="fs-2 fw-bold text-danger" th:text="${pendingCount}">0</div>
+          </div>
+          <i class="bi bi-clock-history fs-1 text-danger opacity-25"></i>
+        </div>
+        <a th:href="@{/web/orders}" class="text-decoration-none small text-muted mt-2 d-block">
+          확인하기 <i class="bi bi-arrow-right"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 최근 주문 목록 -->
+  <div class="card">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+      <h5 class="mb-0"><i class="bi bi-clock me-2 text-primary"></i>최근 주문 목록</h5>
+      <a th:href="@{/web/orders}" class="btn btn-sm btn-outline-primary">전체 보기</a>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr>
+              <th>주문 ID</th>
+              <th>주문자</th>
+              <th>총 금액</th>
+              <th>상태</th>
+              <th>주문일시</th>
+              <th>상세</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:if="${#lists.isEmpty(recentOrders)}">
+              <td colspan="6" class="text-center text-muted py-4">주문 내역이 없습니다.</td>
+            </tr>
+            <tr th:each="order : ${recentOrders}">
+              <td><span class="fw-bold" th:text="'#' + ${order.orderId}"></span></td>
+              <td th:text="${order.userName}">-</td>
+              <td>
+                <span class="fw-bold text-primary"
+                      th:text="${#numbers.formatInteger(order.totalPrice, 0, 'COMMA')} + '원'"></span>
+              </td>
+              <td>
+                <span class="badge rounded-pill"
+                      th:classappend="'badge-status-' + ${order.status}"
+                      th:text="${order.status}"></span>
+              </td>
+              <td>
+                <small th:text="${#temporals.format(order.orderedAt, 'MM/dd HH:mm')}">-</small>
+              </td>
+              <td>
+                <a th:href="@{/web/orders/{id}(id=${order.orderId})}"
+                   class="btn btn-sm btn-outline-secondary">
+                  <i class="bi bi-eye"></i>
+                </a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+</body>
+</html>

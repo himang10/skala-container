@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout('주문 관리', ~{::section})}">
+<head><title>주문 관리</title></head>
+<body>
+<section>
+  <div class="page-header d-flex justify-content-between align-items-center">
+    <div>
+      <h2><i class="bi bi-bag me-2"></i>주문 관리</h2>
+      <p class="text-muted mb-0">전체 주문 현황</p>
+    </div>
+    <a th:href="@{/web/orders/new}" class="btn btn-warning text-dark">
+      <i class="bi bi-plus-circle me-1"></i>주문 생성
+    </a>
+  </div>
+
+  <!-- 사용자별 필터 -->
+  <div class="card mb-4">
+    <div class="card-body py-2">
+      <form th:action="@{/web/orders}" method="get" class="row g-2 align-items-end">
+        <div class="col-md-4">
+          <label class="form-label small fw-semibold mb-1">사용자로 검색</label>
+          <select name="userId" class="form-select form-select-sm">
+            <option value="">-- 전체 사용자 --</option>
+            <option th:each="u : ${users}" th:value="${u.id}"
+                    th:text="${u.name} + ' (' + ${u.email} + ')'"
+                    th:selected="${selectedUserId != null && selectedUserId == u.id}">사용자</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <button type="submit" class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-search me-1"></i>조회
+          </button>
+          <a th:href="@{/web/orders}" class="btn btn-sm btn-outline-secondary ms-1">초기화</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr>
+              <th style="width:80px;">주문 ID</th>
+              <th>주문자</th>
+              <th>주문 항목</th>
+              <th>총 금액</th>
+              <th>상태</th>
+              <th>주문일시</th>
+              <th style="width:100px;" class="text-center">상세</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:if="${#lists.isEmpty(orders)}">
+              <td colspan="7" class="text-center text-muted py-5">
+                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                주문 내역이 없습니다.
+              </td>
+            </tr>
+            <tr th:each="order : ${orders}">
+              <td><span class="badge bg-secondary" th:text="'#' + ${order.orderId}"></span></td>
+              <td>
+                <span class="fw-semibold" th:text="${order.userName}">-</span>
+              </td>
+              <td>
+                <span class="badge bg-light text-dark border"
+                      th:text="${#lists.size(order.items)} + '종류'">0종류</span>
+              </td>
+              <td>
+                <span class="fw-bold text-warning"
+                      th:text="${#numbers.formatInteger(order.totalPrice, 0, 'COMMA')} + '원'"></span>
+              </td>
+              <td>
+                <span class="badge rounded-pill"
+                      th:classappend="'badge-status-' + ${order.status}"
+                      th:text="${order.status}"></span>
+              </td>
+              <td>
+                <small class="text-muted"
+                       th:text="${#temporals.format(order.orderedAt, 'yyyy-MM-dd HH:mm')}">-</small>
+              </td>
+              <td class="text-center">
+                <a th:href="@{/web/orders/{id}(id=${order.orderId})}"
+                   class="btn btn-sm btn-outline-warning">
+                  <i class="bi bi-eye"></i> 상세
+                </a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+</body>
+</html>

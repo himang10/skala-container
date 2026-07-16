@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout('카테고리 관리', ~{::section})}">
+<head><title>카테고리 관리</title></head>
+<body>
+<section>
+  <div class="page-header d-flex justify-content-between align-items-center">
+    <div>
+      <h2><i class="bi bi-grid me-2"></i>카테고리 관리</h2>
+      <p class="text-muted mb-0">전체 <span class="fw-bold text-success" th:text="${#lists.size(categories)}">0</span>개의 카테고리</p>
+    </div>
+    <a th:href="@{/web/categories/new}" class="btn btn-success">
+      <i class="bi bi-plus-circle me-1"></i>카테고리 등록
+    </a>
+  </div>
+
+  <div class="row g-4">
+    <!-- 카테고리 없음 -->
+    <div th:if="${#lists.isEmpty(categories)}" class="col-12">
+      <div class="card text-center py-5">
+        <div class="card-body">
+          <i class="bi bi-inbox fs-1 text-muted d-block mb-3"></i>
+          <p class="text-muted">등록된 카테고리가 없습니다.</p>
+          <a th:href="@{/web/categories/new}" class="btn btn-success mt-2">
+            <i class="bi bi-plus-circle me-1"></i>첫 카테고리 등록
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- 카테고리 카드 -->
+    <div th:each="cat : ${categories}" class="col-md-4 col-lg-3">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <div class="rounded-circle bg-success d-flex align-items-center justify-content-center text-white"
+                 style="width:40px;height:40px;">
+              <i class="bi bi-tag"></i>
+            </div>
+            <span class="badge bg-light text-dark border"
+                  th:text="${cat.productCount} + '개 상품'">0개 상품</span>
+          </div>
+          <h5 class="card-title mt-2 fw-bold" th:text="${cat.name}">카테고리명</h5>
+          <p class="card-text text-muted small"
+             th:text="${cat.description ?: '설명 없음'}">설명</p>
+        </div>
+        <div class="card-footer bg-white border-top-0 d-flex gap-2">
+          <a th:href="@{/web/categories/{id}/edit(id=${cat.id})}"
+             class="btn btn-sm btn-outline-success flex-grow-1">
+            <i class="bi bi-pencil me-1"></i>수정
+          </a>
+          <form th:action="@{/web/categories/{id}/delete(id=${cat.id})}"
+                method="post" class="flex-grow-1"
+                onsubmit="return confirm('카테고리를 삭제하시겠습니까?\n(상품이 있으면 삭제할 수 없습니다)')">
+            <button type="submit" class="btn btn-sm btn-outline-danger w-100">
+              <i class="bi bi-trash me-1"></i>삭제
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+</body>
+</html>

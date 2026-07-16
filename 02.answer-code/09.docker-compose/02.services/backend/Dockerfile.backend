@@ -1,0 +1,14 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y wget 
+# Python 패키지 설치
+RUN pip install --no-cache-dir fastapi uvicorn psycopg2-binary
+
+COPY app.py app.py
+
+EXPOSE 8080
+
+# Uvicorn으로 FastAPI 애플리케이션 실행
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8080"]

@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SK Skala Shop</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
+  <style>
+    body { background-color: #f8f9fa; }
+    .sidebar {
+      min-height: 100vh;
+      background: linear-gradient(180deg, #1a237e 0%, #283593 100%);
+      width: 220px; min-width: 220px;
+    }
+    .sidebar .nav-link { color: rgba(255,255,255,.75); border-radius: 8px; margin: 2px 0; transition: all .2s; }
+    .sidebar .nav-link:hover, .sidebar .nav-link.active { color: #fff; background-color: rgba(255,255,255,.15); }
+    .sidebar .nav-link i { width: 20px; text-align: center; }
+    .sidebar-brand { color:#fff; font-size:1.25rem; font-weight:700; padding:1.5rem 1rem 1rem;
+      border-bottom:1px solid rgba(255,255,255,.2); margin-bottom:.5rem; }
+    .content-wrapper { padding: 2rem; flex:1; }
+    .card { border:none; border-radius:12px; box-shadow:0 2px 12px rgba(0,0,0,.08); }
+    .card-header { border-radius:12px 12px 0 0 !important; }
+    .badge-status-PENDING    { background-color:#ffc107!important; color:#000!important; }
+    .badge-status-CONFIRMED  { background-color:#0d6efd!important; color:#fff!important; }
+    .badge-status-SHIPPED    { background-color:#0dcaf0!important; color:#000!important; }
+    .badge-status-DELIVERED  { background-color:#198754!important; color:#fff!important; }
+    .badge-status-CANCELLED  { background-color:#dc3545!important; color:#fff!important; }
+    .page-header { margin-bottom:1.5rem; }
+    .page-header h2 { font-weight:700; color:#1a237e; }
+    .btn-primary { background-color:#1a237e; border-color:#1a237e; }
+    .btn-primary:hover { background-color:#283593; border-color:#283593; }
+    .table thead th { background-color:#e8eaf6; color:#1a237e; font-weight:600; }
+    .alert { border-radius:10px; }
+    .stat-card { border-left:4px solid; }
+    .stat-card-blue   { border-left-color:#1a237e; }
+    .stat-card-green  { border-left-color:#198754; }
+    .stat-card-orange { border-left-color:#fd7e14; }
+    .stat-card-red    { border-left-color:#dc3545; }
+    #page-content { min-height: calc(100vh - 4rem); }
+  </style>
+</head>
+<body>
+<div class="d-flex" id="app">
+  <!-- 사이드바 -->
+  <nav class="sidebar d-flex flex-column p-3">
+    <div class="sidebar-brand">
+      <i class="bi bi-shop me-2"></i>SK Skala Shop
+    </div>
+    <ul class="nav flex-column gap-1">
+      <li class="nav-item">
+        <a class="nav-link" href="#/dashboard" data-page="dashboard">
+          <i class="bi bi-house me-2"></i>대시보드
+        </a>
+      </li>
+      <li class="nav-item mt-2">
+        <small class="text-white-50 px-2 text-uppercase" style="font-size:.7rem;">관리</small>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="#/users" data-page="users">
+          <i class="bi bi-people me-2"></i>사용자 관리
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="#/categories" data-page="categories">
+          <i class="bi bi-grid me-2"></i>카테고리 관리
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="#/orders" data-page="orders">
+          <i class="bi bi-bag me-2"></i>주문 관리
+        </a>
+      </li>
+    </ul>
+  </nav>
+
+  <!-- 본문 -->
+  <main class="content-wrapper" id="page-content">
+    <div class="text-center py-5">
+      <div class="spinner-border text-primary" role="status"></div>
+    </div>
+  </main>
+</div>
+
+<!-- Toast 알림 -->
+<div class="position-fixed top-0 end-0 p-3" style="z-index:9999" id="toastArea"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// ─────────────────────────────────────────────
+// API 헬퍼
+// ─────────────────────────────────────────────
+const api = {
+  async get(url) {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+  },
+  async post(url, body) {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || `HTTP ${res.status}`);
+    }
+    return res.json();
+  },
+  async put(url, body) {
+    const res = await fetch(url, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || `HTTP ${res.status}`);
+    }
+    return res.json();
+  },
+  async del(url) {
+    const res = await fetch(url, { method: 'DELETE' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.status === 204 ? null : res.json().catch(() => null);
+  }
+};
+
+// ─────────────────────────────────────────────
+// Toast 알림
+// ─────────────────────────────────────────────
+function showToast(msg, type = 'success') {
+  const area = document.getElementById('toastArea');
+  const id = 'toast-' + Date.now();
+  area.insertAdjacentHTML('beforeend', `
+    <div id="${id}" class="toast align-items-center text-bg-${type} border-0 show" role="alert">
+      <div class="d-flex">
+        <div class="toast-body">${msg}</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+      </div>
+    </div>`);
+  setTimeout(() => document.getElementById(id)?.remove(), 3000);
+}
+
+// ─────────────────────────────────────────────
+// 숫자 포맷
+// ─────────────────────────────────────────────
+function fmt(n) { return Number(n).toLocaleString('ko-KR'); }
+
+// ─────────────────────────────────────────────
+// 사이드바 활성화
+// ─────────────────────────────────────────────
+function setActive(page) {
+  document.querySelectorAll('.sidebar .nav-link').forEach(a => {
+    a.classList.toggle('active', a.dataset.page === page);
+  });
+}
+
+// ─────────────────────────────────────────────
+// 페이지 렌더러
+// ─────────────────────────────────────────────
+const content = () => document.getElementById('page-content');
+
+// ── 대시보드 ────────────────────────────────
+async function renderDashboard() {
+  setActive('dashboard');
+  content().innerHTML = `<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>`;
+  try {
+    const [users, catRes] = await Promise.all([
+      api.get('/api/users'),
+      api.get('/api/categories')
+    ]);
+    const categories = catRes.data || catRes;
+
+    // 전체 주문: 사용자별로 조회 후 합산
+    let allOrders = [];
+    await Promise.all(users.map(u =>
+      api.get(`/api/orders?userId=${u.id}`)
+        .then(r => { allOrders = allOrders.concat(r.data || []); })
+        .catch(() => {})
+    ));
+    const pendingOrders = allOrders.filter(o => o.status === 'PENDING');
+    const recentOrders = [...allOrders]
+      .sort((a, b) => new Date(b.orderedAt) - new Date(a.orderedAt))
+      .slice(0, 10);
+
+    content().innerHTML = `
+      <div class="page-header d-flex justify-content-between align-items-center">
+        <div>
+          <h2><i class="bi bi-house me-2"></i>대시보드</h2>
+          <p class="text-muted mb-0">SK Skala 쇼핑몰 관리 현황</p>
+        </div>
+      </div>
+
+      <div class="row g-4 mb-4">
+        <div class="col-md-3">
+          <div class="card stat-card stat-card-blue p-3">
+            <div class="d-flex align-items-center">
+              <div class="flex-grow-1">
+                <div class="text-muted small">전체 사용자</div>
+                <div class="fs-2 fw-bold text-primary">${users.length}</div>
+              </div>
+              <i class="bi bi-people fs-1 text-primary opacity-25"></i>
+            </div>
+            <a href="#/users" class="text-decoration-none small text-muted mt-2 d-block">관리하기 <i class="bi bi-arrow-right"></i></a>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card stat-card stat-card-green p-3">
+            <div class="d-flex align-items-center">
+              <div class="flex-grow-1">
+                <div class="text-muted small">전체 카테고리</div>
+                <div class="fs-2 fw-bold text-success">${categories.length}</div>
+              </div>
+              <i class="bi bi-grid fs-1 text-success opacity-25"></i>
+            </div>
+            <a href="#/categories" class="text-decoration-none small text-muted mt-2 d-block">관리하기 <i class="bi bi-arrow-right"></i></a>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card stat-card stat-card-orange p-3">
+            <div class="d-flex align-items-center">
+              <div class="flex-grow-1">
+                <div class="text-muted small">전체 주문</div>
+                <div class="fs-2 fw-bold text-warning">${allOrders.length}</div>
+              </div>
+              <i class="bi bi-bag fs-1 text-warning opacity-25"></i>
+            </div>
+            <a href="#/orders" class="text-decoration-none small text-muted mt-2 d-block">관리하기 <i class="bi bi-arrow-right"></i></a>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card stat-card stat-card-red p-3">
+            <div class="d-flex align-items-center">
+              <div class="flex-grow-1">
+                <div class="text-muted small">대기 중 주문</div>
+                <div class="fs-2 fw-bold text-danger">${pendingOrders.length}</div>
+              </div>
+              <i class="bi bi-clock-history fs-1 text-danger opacity-25"></i>
+            </div>
+            <a href="#/orders" class="text-decoration-none small text-muted mt-2 d-block">확인하기 <i class="bi bi-arrow-right"></i></a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+          <h5 class="mb-0"><i class="bi bi-clock me-2 text-primary"></i>최근 주문 목록</h5>
+          <a href="#/orders" class="btn btn-sm btn-outline-primary">전체 보기</a>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead><tr><th>주문 ID</th><th>주문자</th><th>총 금액</th><th>상태</th><th>주문일시</th><th>상세</th></tr></thead>
+              <tbody>
+                ${recentOrders.length === 0
+                  ? '<tr><td colspan="6" class="text-center text-muted py-4">주문 내역이 없습니다.</td></tr>'
+                  : recentOrders.map(o => `
+                    <tr>
+                      <td><span class="fw-bold">#${o.orderId}</span></td>
+                      <td>${o.userName}</td>
+                      <td class="fw-bold text-warning">${fmt(o.totalPrice)}원</td>
+                      <td><span class="badge rounded-pill badge-status-${o.status}">${o.status}</span></td>
+                      <td><small class="text-muted">${o.orderedAt ? o.orderedAt.substring(0,16).replace('T',' ') : '-'}</small></td>
+                      <td><a href="#/orders/${o.orderId}" class="btn btn-sm btn-outline-warning"><i class="bi bi-eye"></i> 상세</a></td>
+                    </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>`;
+  } catch (e) {
+    content().innerHTML = `<div class="alert alert-danger">데이터 로딩 실패: ${e.message}</div>`;
+  }
+}
+
+// ── 사용자 목록 ─────────────────────────────
+async function renderUsers() {
+  setActive('users');
+  content().innerHTML = `<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>`;
+  try {
+    const users = await api.get('/api/users');
+    content().innerHTML = `
+      <div class="page-header d-flex justify-content-between align-items-center">
+        <div>
+          <h2><i class="bi bi-people me-2"></i>사용자 관리</h2>
+          <p class="text-muted mb-0">전체 <span class="fw-bold text-primary">${users.length}</span>명의 사용자</p>
+        </div>
+        <a href="#/users/new" class="btn btn-primary"><i class="bi bi-person-plus me-1"></i>사용자 등록</a>
+      </div>
+      <div class="card">
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead><tr><th style="width:80px;">ID</th><th>이름</th><th>이메일</th><th style="width:160px;" class="text-center">작업</th></tr></thead>
+              <tbody>
+                ${users.length === 0
+                  ? '<tr><td colspan="4" class="text-center text-muted py-5"><i class="bi bi-inbox fs-1 d-block mb-2"></i>등록된 사용자가 없습니다.</td></tr>'
+                  : users.map(u => `
+                    <tr>
+                      <td><span class="badge bg-secondary">${u.id}</span></td>
+                      <td>
+                        <div class="d-flex align-items-center gap-2">
+                          <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center text-white fw-bold"
+                               style="width:32px;height:32px;font-size:.8rem;">${u.name.charAt(0)}</div>
+                          <span class="fw-semibold">${u.name}</span>
+                        </div>
+                      </td>
+                      <td><span class="text-muted">${u.email}</span></td>
+                      <td class="text-center">
+                        <a href="#/users/${u.id}/edit" class="btn btn-sm btn-outline-primary me-1"><i class="bi bi-pencil"></i> 수정</a>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteUser(${u.id})"><i class="bi bi-trash"></i> 삭제</button>
+                      </td>
+                    </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>`;
+  } catch (e) {
+    content().innerHTML = `<div class="alert alert-danger">로딩 실패: ${e.message}</div>`;
+  }
+}
+
+async function deleteUser(id) {
+  if (!confirm('정말 삭제하시겠습니까?')) return;
+  try {
+    await api.del(`/api/users/${id}`);
+    showToast('사용자가 삭제되었습니다.');
+    renderUsers();
+  } catch (e) {
+    showToast('삭제 실패: ' + e.message, 'danger');
+  }
+}
+
+// ── 사용자 폼 ────────────────────────────────
+async function renderUserForm(id) {
+  setActive('users');
+  const isNew = !id;
+  let user = { name: '', email: '' };
+  if (!isNew) {
+    try {
+      user = await api.get(`/api/users/${id}`);
+    } catch (e) {
+      content().innerHTML = `<div class="alert alert-danger">사용자 조회 실패: ${e.message}</div>`;
+      return;
+    }
+  }
+  content().innerHTML = `
+    <div class="page-header">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="#/users">사용자 관리</a></li>
+          <li class="breadcrumb-item active">${isNew ? '신규 등록' : '정보 수정'}</li>
+        </ol>
+      </nav>
+      <h2>${isNew ? '사용자 등록' : '사용자 정보 수정'}</h2>
+    </div>
+    <div class="row justify-content-center">
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header bg-white py-3">
+            <h5 class="mb-0"><i class="bi bi-person-fill me-2 text-primary"></i>${isNew ? '새 사용자 정보 입력' : '사용자 정보 수정'}</h5>
+          </div>
+          <div class="card-body p-4">
+            <form id="userForm">
+              <div class="mb-4">
+                <label class="form-label fw-semibold">이름 <span class="text-danger">*</span></label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-person"></i></span>
+                  <input type="text" id="userName" class="form-control" value="${user.name || ''}" placeholder="홍길동" required maxlength="50"/>
+                </div>
+              </div>
+              <div class="mb-4">
+                <label class="form-label fw-semibold">이메일 <span class="text-danger">*</span></label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                  <input type="email" id="userEmail" class="form-control" value="${user.email || ''}" placeholder="example@email.com" required/>
+                </div>
+              </div>
+              <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary flex-grow-1"><i class="bi bi-check-circle me-1"></i>${isNew ? '등록' : '저장'}</button>
+                <a href="#/users" class="btn btn-outline-secondary flex-grow-1"><i class="bi bi-x-circle me-1"></i>취소</a>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>`;
+
+  document.getElementById('userForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const body = {
+      name: document.getElementById('userName').value,
+      email: document.getElementById('userEmail').value
+    };
+    try {
+      if (isNew) {
+        await api.post('/api/users', body);
+        showToast('사용자가 등록되었습니다.');
+      } else {
+        await api.put(`/api/users/${id}`, body);
+        showToast('사용자 정보가 수정되었습니다.');
+      }
+      route('#/users');
+    } catch (e) {
+      showToast('저장 실패: ' + e.message, 'danger');
+    }
+  });
+}
+
+// ── 카테고리 목록 ────────────────────────────
+async function renderCategories() {
+  setActive('categories');
+  content().innerHTML = `<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>`;
+  try {
+    const res = await api.get('/api/categories');
+    const cats = res.data || res;
+    content().innerHTML = `
+      <div class="page-header d-flex justify-content-between align-items-center">
+        <div>
+          <h2><i class="bi bi-grid me-2"></i>카테고리 관리</h2>
+          <p class="text-muted mb-0">전체 <span class="fw-bold text-success">${cats.length}</span>개의 카테고리</p>
+        </div>
+        <a href="#/categories/new" class="btn btn-success"><i class="bi bi-plus-circle me-1"></i>카테고리 등록</a>
+      </div>
+      <div class="row g-4">
+        ${cats.length === 0
+          ? `<div class="col-12"><div class="card text-center py-5"><div class="card-body">
+              <i class="bi bi-inbox fs-1 text-muted d-block mb-3"></i>
+              <p class="text-muted">등록된 카테고리가 없습니다.</p>
+              <a href="#/categories/new" class="btn btn-success mt-2"><i class="bi bi-plus-circle me-1"></i>첫 카테고리 등록</a>
+             </div></div></div>`
+          : cats.map(c => `
+            <div class="col-md-4 col-lg-3">
+              <div class="card h-100">
+                <div class="card-body">
+                  <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div class="rounded-circle bg-success d-flex align-items-center justify-content-center text-white" style="width:40px;height:40px;">
+                      <i class="bi bi-tag"></i>
+                    </div>
+                    <span class="badge bg-light text-dark border">${c.productCount || 0}개 상품</span>
+                  </div>
+                  <h5 class="card-title mt-2 fw-bold">${c.name}</h5>
+                  <p class="card-text text-muted small">${c.description || '설명 없음'}</p>
+                </div>
+                <div class="card-footer bg-white border-top-0 d-flex gap-2">
+                  <a href="#/categories/${c.id}/edit" class="btn btn-sm btn-outline-success flex-grow-1"><i class="bi bi-pencil me-1"></i>수정</a>
+                  <button class="btn btn-sm btn-outline-danger flex-grow-1" onclick="deleteCategory(${c.id})"><i class="bi bi-trash me-1"></i>삭제</button>
+                </div>
+              </div>
+            </div>`).join('')}
+      </div>`;
+  } catch (e) {
+    content().innerHTML = `<div class="alert alert-danger">로딩 실패: ${e.message}</div>`;
+  }
+}
+
+async function deleteCategory(id) {
+  if (!confirm('카테고리를 삭제하시겠습니까?\n(상품이 있으면 삭제할 수 없습니다)')) return;
+  try {
+    await api.del(`/api/categories/${id}`);
+    showToast('카테고리가 삭제되었습니다.');
+    renderCategories();
+  } catch (e) {
+    showToast('삭제 실패: ' + e.message, 'danger');
+  }
+}
+
+// ── 카테고리 폼 ──────────────────────────────
+async function renderCategoryForm(id) {
+  setActive('categories');
+  const isNew = !id;
+  let cat = { name: '', description: '' };
+  if (!isNew) {
+    try {
+      const res = await api.get(`/api/categories/${id}`);
+      cat = res.data || res;
+    } catch (e) {
+      content().innerHTML = `<div class="alert alert-danger">카테고리 조회 실패: ${e.message}</div>`;
+      return;
+    }
+  }
+  content().innerHTML = `
+    <div class="page-header">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="#/categories">카테고리 관리</a></li>
+          <li class="breadcrumb-item active">${isNew ? '신규 등록' : '수정'}</li>
+        </ol>
+      </nav>
+      <h2><i class="bi bi-grid me-2"></i>${isNew ? '카테고리 등록' : '카테고리 수정'}</h2>
+    </div>
+    <div class="row justify-content-center">
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header bg-white py-3">
+            <h5 class="mb-0"><i class="bi bi-tag-fill me-2 text-success"></i>${isNew ? '새 카테고리 정보 입력' : '카테고리 정보 수정'}</h5>
+          </div>
+          <div class="card-body p-4">
+            <form id="catForm">
+              <div class="mb-4">
+                <label class="form-label fw-semibold">카테고리명 <span class="text-danger">*</span></label>
+                <div class="input-group">
+                  <span class="input-group-text bg-success text-white"><i class="bi bi-tag"></i></span>
+                  <input type="text" id="catName" class="form-control" value="${cat.name || ''}" placeholder="예: 전자제품" required maxlength="50"/>
+                </div>
+                <div class="form-text">카테고리명은 중복될 수 없습니다.</div>
+              </div>
+              <div class="mb-4">
+                <label class="form-label fw-semibold">설명</label>
+                <textarea id="catDesc" class="form-control" rows="4" placeholder="카테고리에 대한 간단한 설명을 입력하세요.">${cat.description || ''}</textarea>
+              </div>
+              <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-success flex-grow-1"><i class="bi bi-check-circle me-1"></i>${isNew ? '등록' : '저장'}</button>
+                <a href="#/categories" class="btn btn-outline-secondary flex-grow-1"><i class="bi bi-x-circle me-1"></i>취소</a>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>`;
+
+  document.getElementById('catForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const body = {
+      name: document.getElementById('catName').value,
+      description: document.getElementById('catDesc').value
+    };
+    try {
+      if (isNew) {
+        await api.post('/api/categories', body);
+        showToast('카테고리가 등록되었습니다.');
+      } else {
+        await api.put(`/api/categories/${id}`, body);
+        showToast('카테고리가 수정되었습니다.');
+      }
+      route('#/categories');
+    } catch (e) {
+      showToast('저장 실패: ' + e.message, 'danger');
+    }
+  });
+}
+
+// ── 주문 목록 ────────────────────────────────
+async function renderOrders(selectedUserId) {
+  setActive('orders');
+  content().innerHTML = `<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>`;
+  try {
+    const users = await api.get('/api/users');
+    let orders = [];
+    if (selectedUserId) {
+      const res = await api.get(`/api/orders?userId=${selectedUserId}`);
+      orders = res.data || [];
+    } else if (users.length > 0) {
+      // 선택된 사용자 없으면 전체 표시
+      const results = await Promise.all(
+        users.map(u => api.get(`/api/orders?userId=${u.id}`).then(r => r.data || []).catch(() => []))
+      );
+      orders = results.flat().sort((a, b) => new Date(b.orderedAt) - new Date(a.orderedAt));
+    }
+
+    content().innerHTML = `
+      <div class="page-header d-flex justify-content-between align-items-center">
+        <div>
+          <h2><i class="bi bi-bag me-2"></i>주문 관리</h2>
+          <p class="text-muted mb-0">전체 주문 현황</p>
+        </div>
+        <a href="#/orders/new" class="btn btn-warning text-dark"><i class="bi bi-plus-circle me-1"></i>주문 생성</a>
+      </div>
+
+      <div class="card mb-4">
+        <div class="card-body py-2">
+          <form id="filterForm" class="row g-2 align-items-end">
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold mb-1">사용자로 검색</label>
+              <select id="filterUser" class="form-select form-select-sm">
+                <option value="">-- 전체 사용자 --</option>
+                ${users.map(u => `<option value="${u.id}" ${String(u.id) === String(selectedUserId) ? 'selected' : ''}>${u.name} (${u.email})</option>`).join('')}
+              </select>
+            </div>
+            <div class="col-md-2">
+              <button type="submit" class="btn btn-sm btn-outline-primary"><i class="bi bi-search me-1"></i>조회</button>
+              <button type="button" class="btn btn-sm btn-outline-secondary ms-1" onclick="route('#/orders')">초기화</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead><tr><th style="width:80px;">주문 ID</th><th>주문자</th><th>주문 항목</th><th>총 금액</th><th>상태</th><th>주문일시</th><th style="width:100px;" class="text-center">상세</th></tr></thead>
+              <tbody>
+                ${orders.length === 0
+                  ? '<tr><td colspan="7" class="text-center text-muted py-5"><i class="bi bi-inbox fs-1 d-block mb-2"></i>주문 내역이 없습니다.</td></tr>'
+                  : orders.map(o => `
+                    <tr>
+                      <td><span class="badge bg-secondary">#${o.orderId}</span></td>
+                      <td><span class="fw-semibold">${o.userName}</span></td>
+                      <td><span class="badge bg-light text-dark border">${(o.items || []).length}종류</span></td>
+                      <td><span class="fw-bold text-warning">${fmt(o.totalPrice)}원</span></td>
+                      <td><span class="badge rounded-pill badge-status-${o.status}">${o.status}</span></td>
+                      <td><small class="text-muted">${o.orderedAt ? o.orderedAt.substring(0,16).replace('T',' ') : '-'}</small></td>
+                      <td class="text-center"><a href="#/orders/${o.orderId}" class="btn btn-sm btn-outline-warning"><i class="bi bi-eye"></i> 상세</a></td>
+                    </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>`;
+
+    document.getElementById('filterForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const uid = document.getElementById('filterUser').value;
+      route(uid ? `#/orders?userId=${uid}` : '#/orders');
+    });
+  } catch (e) {
+    content().innerHTML = `<div class="alert alert-danger">로딩 실패: ${e.message}</div>`;
+  }
+}
+
+// ── 주문 상세 ────────────────────────────────
+async function renderOrderDetail(id) {
+  setActive('orders');
+  content().innerHTML = `<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>`;
+  try {
+    const res = await api.get(`/api/orders/${id}`);
+    const o = res.data || res;
+    const statusFlow = { PENDING: ['CONFIRMED','CANCELLED'], CONFIRMED: ['SHIPPED'], SHIPPED: ['DELIVERED'] };
+    const nextStatuses = statusFlow[o.status] || [];
+
+    const statusBtns = {
+      CONFIRMED: `<button class="btn btn-sm btn-primary" onclick="changeOrderStatus(${o.orderId},'CONFIRMED')"><i class="bi bi-check2-circle me-1"></i>확정</button>`,
+      SHIPPED:   `<button class="btn btn-sm btn-info"    onclick="changeOrderStatus(${o.orderId},'SHIPPED')"><i class="bi bi-truck me-1"></i>배송</button>`,
+      DELIVERED: `<button class="btn btn-sm btn-success" onclick="changeOrderStatus(${o.orderId},'DELIVERED')"><i class="bi bi-check-all me-1"></i>완료</button>`,
+      CANCELLED: `<button class="btn btn-sm btn-danger"  onclick="changeOrderStatus(${o.orderId},'CANCELLED')"><i class="bi bi-x-circle me-1"></i>취소</button>`
+    };
+
+    content().innerHTML = `
+      <div class="page-header d-flex justify-content-between align-items-center">
+        <div>
+          <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+              <li class="breadcrumb-item"><a href="#/orders">주문 관리</a></li>
+              <li class="breadcrumb-item active">주문 #${o.orderId}</li>
+            </ol>
+          </nav>
+          <h2><i class="bi bi-receipt me-2"></i>주문 상세 <span class="fs-4 fw-normal text-muted">#${o.orderId}</span></h2>
+        </div>
+        <div class="d-flex gap-2">
+          ${nextStatuses.map(s => statusBtns[s] || '').join('')}
+        </div>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-md-4">
+          <div class="card h-100">
+            <div class="card-header bg-white">
+              <h6 class="mb-0 fw-bold"><i class="bi bi-info-circle me-2 text-primary"></i>주문 정보</h6>
+            </div>
+            <div class="card-body">
+              <dl class="row mb-0">
+                <dt class="col-5 text-muted">주문 ID</dt>   <dd class="col-7 fw-semibold">#${o.orderId}</dd>
+                <dt class="col-5 text-muted">주문자</dt>    <dd class="col-7 fw-semibold">${o.userName}</dd>
+                <dt class="col-5 text-muted">주문 상태</dt> <dd class="col-7"><span class="badge rounded-pill badge-status-${o.status}">${o.status}</span></dd>
+                <dt class="col-5 text-muted">주문일시</dt>  <dd class="col-7 small">${o.orderedAt ? o.orderedAt.substring(0,16).replace('T',' ') : '-'}</dd>
+                <dt class="col-5 text-muted">총 금액</dt>   <dd class="col-7 fw-bold text-warning fs-5">${fmt(o.totalPrice)}원</dd>
+              </dl>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-8">
+          <div class="card">
+            <div class="card-header bg-white">
+              <h6 class="mb-0 fw-bold">
+                <i class="bi bi-list-ul me-2 text-warning"></i>주문 항목
+                <span class="badge bg-warning text-dark ms-1">${(o.items||[]).length}종류</span>
+              </h6>
+            </div>
+            <div class="card-body p-0">
+              <table class="table mb-0">
+                <thead><tr><th>상품명</th><th class="text-end">단가</th><th class="text-center">수량</th><th class="text-end">소계</th></tr></thead>
+                <tbody>
+                  ${(o.items||[]).map(item => `
+                    <tr>
+                      <td class="fw-semibold">${item.productName}</td>
+                      <td class="text-end text-muted">${fmt(item.unitPrice)}원</td>
+                      <td class="text-center"><span class="badge bg-light text-dark border">${item.quantity}개</span></td>
+                      <td class="text-end fw-bold">${fmt(item.subtotal)}원</td>
+                    </tr>`).join('')}
+                  <tr class="table-warning">
+                    <td colspan="3" class="text-end fw-bold">합계</td>
+                    <td class="text-end fw-bold">${fmt(o.totalPrice)}원</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>`;
+  } catch (e) {
+    content().innerHTML = `<div class="alert alert-danger">주문 조회 실패: ${e.message}</div>`;
+  }
+}
+
+async function changeOrderStatus(id, status) {
+  const labels = { CONFIRMED:'확정', SHIPPED:'배송 처리', DELIVERED:'배송 완료', CANCELLED:'취소' };
+  if (!confirm(`주문을 ${labels[status] || status} 처리하시겠습니까?`)) return;
+  try {
+    await api.put(`/api/orders/${id}/status`, { status });
+    showToast(`주문 상태가 ${labels[status]}(으)로 변경되었습니다.`);
+    renderOrderDetail(id);
+  } catch (e) {
+    showToast('상태 변경 실패: ' + e.message, 'danger');
+  }
+}
+
+// ── 주문 생성 폼 ──────────────────────────────
+async function renderOrderForm() {
+  setActive('orders');
+  content().innerHTML = `<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>`;
+  try {
+    const [users, products] = await Promise.all([
+      api.get('/api/users'),
+      api.get('/api/products')
+    ]);
+    const productOptions = products
+      .map(p => `<option value="${p.id}">${p.name} (${fmt(p.price)}원, 재고:${p.stockQuantity})</option>`)
+      .join('');
+
+    content().innerHTML = `
+      <div class="page-header">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="#/orders">주문 관리</a></li>
+            <li class="breadcrumb-item active">새 주문</li>
+          </ol>
+        </nav>
+        <h2><i class="bi bi-bag-plus me-2"></i>주문 생성</h2>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-lg-8">
+          <div class="card">
+            <div class="card-header bg-white py-3">
+              <h5 class="mb-0"><i class="bi bi-cart me-2 text-warning"></i>주문 정보 입력</h5>
+            </div>
+            <div class="card-body p-4">
+              <form id="orderForm">
+                <div class="mb-4">
+                  <label class="form-label fw-semibold">주문자 <span class="text-danger">*</span></label>
+                  <select id="orderUserId" class="form-select" required>
+                    <option value="">-- 주문자를 선택하세요 --</option>
+                    ${users.map(u => `<option value="${u.id}">${u.name} (${u.email})</option>`).join('')}
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <label class="form-label fw-semibold mb-0">주문 항목 <span class="text-danger">*</span></label>
+                    <button type="button" class="btn btn-sm btn-outline-warning" id="addItemBtn"><i class="bi bi-plus-circle me-1"></i>항목 추가</button>
+                  </div>
+                  <div id="orderItems">
+                    <div class="order-item border rounded p-3 mb-2 bg-light">
+                      <div class="row g-2 align-items-center">
+                        <div class="col-7">
+                          <select name="productId" class="form-select form-select-sm product-select" required>
+                            <option value="">-- 상품 선택 --</option>
+                            ${productOptions}
+                          </select>
+                        </div>
+                        <div class="col-3">
+                          <div class="input-group input-group-sm">
+                            <input type="number" name="quantity" class="form-control" min="1" value="1" required/>
+                            <span class="input-group-text">개</span>
+                          </div>
+                        </div>
+                        <div class="col-2">
+                          <button type="button" class="btn btn-sm btn-outline-danger remove-item w-100" style="display:none;"><i class="bi bi-trash"></i></button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="d-flex gap-2 mt-4">
+                  <button type="submit" class="btn btn-warning text-dark flex-grow-1 fw-semibold"><i class="bi bi-bag-check me-1"></i>주문 생성</button>
+                  <a href="#/orders" class="btn btn-outline-secondary flex-grow-1"><i class="bi bi-x-circle me-1"></i>취소</a>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="card border-warning">
+            <div class="card-header bg-warning bg-opacity-10">
+              <h6 class="mb-0 fw-bold text-warning"><i class="bi bi-info-circle me-2"></i>주문 안내</h6>
+            </div>
+            <div class="card-body">
+              <ul class="list-unstyled mb-0 small text-muted">
+                <li class="mb-2"><i class="bi bi-dot text-warning"></i>주문자와 최소 1개 이상의 상품을 선택하세요.</li>
+                <li class="mb-2"><i class="bi bi-dot text-warning"></i>재고가 충분한 상품만 주문 가능합니다.</li>
+                <li class="mb-2"><i class="bi bi-dot text-warning"></i>주문 생성 후 <strong>PENDING</strong> 상태로 시작됩니다.</li>
+                <li class="mb-2"><i class="bi bi-dot text-warning"></i>상태 전환: PENDING → CONFIRMED → SHIPPED → DELIVERED</li>
+                <li><i class="bi bi-dot text-warning"></i>취소는 PENDING 상태에서만 가능합니다.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>`;
+
+    // 항목 추가 버튼
+    document.getElementById('addItemBtn').addEventListener('click', () => {
+      const container = document.getElementById('orderItems');
+      const div = document.createElement('div');
+      div.className = 'order-item border rounded p-3 mb-2 bg-light';
+      div.innerHTML = `
+        <div class="row g-2 align-items-center">
+          <div class="col-7">
+            <select name="productId" class="form-select form-select-sm product-select" required>
+              <option value="">-- 상품 선택 --</option>
+              ${productOptions}
+            </select>
+          </div>
+          <div class="col-3">
+            <div class="input-group input-group-sm">
+              <input type="number" name="quantity" class="form-control" min="1" value="1" required/>
+              <span class="input-group-text">개</span>
+            </div>
+          </div>
+          <div class="col-2">
+            <button type="button" class="btn btn-sm btn-outline-danger remove-item w-100"><i class="bi bi-trash"></i></button>
+          </div>
+        </div>`;
+      div.querySelector('.remove-item').addEventListener('click', () => div.remove());
+      container.appendChild(div);
+      // 첫 번째 항목 삭제 버튼 표시
+      container.querySelectorAll('.remove-item').forEach(b => b.style.display = '');
+    });
+
+    document.getElementById('orderForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const userId = document.getElementById('orderUserId').value;
+      const items = [];
+      document.querySelectorAll('.order-item').forEach(row => {
+        const pid = row.querySelector('[name=productId]').value;
+        const qty = row.querySelector('[name=quantity]').value;
+        if (pid && qty) items.push({ productId: Number(pid), quantity: Number(qty) });
+      });
+      if (!userId) { showToast('주문자를 선택하세요.', 'warning'); return; }
+      if (items.length === 0) { showToast('주문 항목을 추가하세요.', 'warning'); return; }
+      try {
+        await api.post('/api/orders', { userId: Number(userId), items });
+        showToast('주문이 생성되었습니다.');
+        route('#/orders');
+      } catch (e) {
+        showToast('주문 생성 실패: ' + e.message, 'danger');
+      }
+    });
+  } catch (e) {
+    content().innerHTML = `<div class="alert alert-danger">로딩 실패: ${e.message}</div>`;
+  }
+}
+
+// ─────────────────────────────────────────────
+// 해시 라우터
+// ─────────────────────────────────────────────
+function route(hash) {
+  if (hash) {
+    window.location.hash = hash.replace(/^#/, '');
+    return;
+  }
+  const raw = window.location.hash.replace(/^#\/?/, '') || 'dashboard';
+  const [path, qs] = raw.split('?');
+  const parts = path.split('/').filter(Boolean);
+  const params = Object.fromEntries(new URLSearchParams(qs || ''));
+
+  // 라우트 매칭
+  if (parts.length === 0 || parts[0] === 'dashboard') {
+    renderDashboard();
+  } else if (parts[0] === 'users' && parts.length === 1) {
+    renderUsers();
+  } else if (parts[0] === 'users' && parts[1] === 'new') {
+    renderUserForm(null);
+  } else if (parts[0] === 'users' && parts[2] === 'edit') {
+    renderUserForm(parts[1]);
+  } else if (parts[0] === 'categories' && parts.length === 1) {
+    renderCategories();
+  } else if (parts[0] === 'categories' && parts[1] === 'new') {
+    renderCategoryForm(null);
+  } else if (parts[0] === 'categories' && parts[2] === 'edit') {
+    renderCategoryForm(parts[1]);
+  } else if (parts[0] === 'orders' && parts.length === 1) {
+    renderOrders(params.userId || null);
+  } else if (parts[0] === 'orders' && parts[1] === 'new') {
+    renderOrderForm();
+  } else if (parts[0] === 'orders' && parts.length === 2) {
+    renderOrderDetail(parts[1]);
+  } else {
+    renderDashboard();
+  }
+}
+
+window.addEventListener('hashchange', () => route());
+window.addEventListener('DOMContentLoaded', () => route());
+</script>
+</body>
+</html>

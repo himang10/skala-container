@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout('카테고리 등록/수정', ~{::section})}">
+<head><title>카테고리 폼</title></head>
+<body>
+<section>
+  <div class="page-header">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a th:href="@{/web/categories}">카테고리 관리</a></li>
+        <li class="breadcrumb-item active" th:text="${isNew} ? '신규 등록' : '수정'"></li>
+      </ol>
+    </nav>
+    <h2>
+      <i class="bi bi-grid me-2"></i>
+      <span th:text="${isNew} ? '카테고리 등록' : '카테고리 수정'">카테고리 폼</span>
+    </h2>
+  </div>
+
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header bg-white py-3">
+          <h5 class="mb-0">
+            <i class="bi bi-tag-fill me-2 text-success"></i>
+            <span th:text="${isNew} ? '새 카테고리 정보 입력' : '카테고리 정보 수정'">카테고리 정보</span>
+          </h5>
+        </div>
+        <div class="card-body p-4">
+          <form th:action="${isNew} ? @{/web/categories} : @{/web/categories/{id}(id=${categoryId})}"
+                method="post">
+            <input th:if="${!isNew}" type="hidden" name="_method" value="put"/>
+
+            <div class="mb-4">
+              <label class="form-label fw-semibold" for="name">
+                카테고리명 <span class="text-danger">*</span>
+              </label>
+              <div class="input-group">
+                <span class="input-group-text bg-success text-white"><i class="bi bi-tag"></i></span>
+                <input type="text" id="name" name="name" class="form-control"
+                       th:value="${category?.name}" placeholder="예: 전자제품" required maxlength="50"/>
+              </div>
+              <div class="form-text">카테고리명은 중복될 수 없습니다.</div>
+            </div>
+
+            <div class="mb-4">
+              <label class="form-label fw-semibold" for="description">설명</label>
+              <textarea id="description" name="description" class="form-control" rows="4"
+                        placeholder="카테고리에 대한 간단한 설명을 입력하세요."
+                        th:text="${category?.description}"></textarea>
+            </div>
+
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-success flex-grow-1">
+                <i class="bi bi-check-circle me-1"></i>
+                <span th:text="${isNew} ? '등록' : '저장'">저장</span>
+              </button>
+              <a th:href="@{/web/categories}" class="btn btn-outline-secondary flex-grow-1">
+                <i class="bi bi-x-circle me-1"></i>취소
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+</body>
+</html>

@@ -1,0 +1,119 @@
+body {
+  background-color: #f8f9fa;
+}
+
+.sidebar {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #1a237e 0%, #283593 100%);
+  width: 220px;
+  min-width: 220px;
+}
+
+.sidebar .nav-link {
+  color: rgba(255, 255, 255, 0.75);
+  border-radius: 8px;
+  margin: 2px 0;
+  transition: all 0.2s;
+}
+
+.sidebar .nav-link:hover,
+.sidebar .nav-link.active {
+  color: #fff;
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.sidebar .nav-link i {
+  width: 20px;
+  text-align: center;
+}
+
+.sidebar-brand {
+  color: #fff;
+  font-size: 1.25rem;
+  font-weight: 700;
+  padding: 1.5rem 1rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  margin-bottom: 0.5rem;
+}
+
+.content-wrapper {
+  padding: 2rem;
+  flex: 1;
+}
+
+.card {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.card-header {
+  border-radius: 12px 12px 0 0 !important;
+}
+
+/* 주문 상태 뱃지 */
+.badge-status-PENDING {
+  background-color: #ffc107 !important;
+  color: #000 !important;
+}
+.badge-status-CONFIRMED {
+  background-color: #0d6efd !important;
+  color: #fff !important;
+}
+.badge-status-SHIPPED {
+  background-color: #0dcaf0 !important;
+  color: #000 !important;
+}
+.badge-status-DELIVERED {
+  background-color: #198754 !important;
+  color: #fff !important;
+}
+.badge-status-CANCELLED {
+  background-color: #dc3545 !important;
+  color: #fff !important;
+}
+
+.page-header {
+  margin-bottom: 1.5rem;
+}
+
+.page-header h2 {
+  font-weight: 700;
+  color: #1a237e;
+}
+
+.btn-primary {
+  background-color: #1a237e;
+  border-color: #1a237e;
+}
+
+.btn-primary:hover {
+  background-color: #283593;
+  border-color: #283593;
+}
+
+.table thead th {
+  background-color: #e8eaf6;
+  color: #1a237e;
+  font-weight: 600;
+}
+
+.alert {
+  border-radius: 10px;
+}
+
+.stat-card {
+  border-left: 4px solid;
+}
+.stat-card-blue {
+  border-left-color: #1a237e;
+}
+.stat-card-green {
+  border-left-color: #198754;
+}
+.stat-card-orange {
+  border-left-color: #fd7e14;
+}
+.stat-card-red {
+  border-left-color: #dc3545;
+}
