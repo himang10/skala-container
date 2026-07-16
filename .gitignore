@@ -18,6 +18,7 @@
 *.zip
 *.tar.gz
 *.rar
+*.tar
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
@@ -30,4 +31,3 @@ dist
 
 # 대용량 파일 제외 (GitHub 100MB 제한 초과)
 02.answer-code/04.volumes/db-data/
-02.answer-code/07.in-images/*.tar
