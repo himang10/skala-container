@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>주문 관리</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <header class="topbar">
+        <div class="topbar-inner">
+            <a class="logo" href="/index.html">SK <span class="accent">AX</span> 주문 관리</a>
+            <nav>
+                <a href="/index.html">홈</a>
+                <a href="/products.html">상품 관리</a>
+                <a href="/users.html">사용자 관리</a>
+                <a href="/orders.html" class="active">주문 관리</a>
+                <a href="/system.html">시스템 정보</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <h1 class="page-title">주문 관리</h1>
+        <p class="page-desc">상품을 주문하고, 상태 버튼을 눌러 결제·배송 단계를 진행합니다.</p>
+
+        <!-- 1단계: 상품 목록에서 주문 버튼 클릭 -->
+        <div class="card">
+            <h2>상품 목록</h2>
+            <table>
+                <thead>
+                    <tr><th>ID</th><th>상품명</th><th>가격</th><th>재고</th><th>주문</th></tr>
+                </thead>
+                <tbody id="productBody">
+                    <tr class="empty-row"><td colspan="5">불러오는 중...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 2단계: 주문 목록에서 상태 버튼 클릭 → 다음 상태로 전환 -->
+        <div class="card">
+            <h2>주문 목록</h2>
+            <p class="page-desc">상태 버튼을 클릭하면 다음 단계로 진행됩니다.
+                (주문 완료 → 결제 대기 → 결제 완료 → 배송 대기 → 배송 완료)</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th><th>사용자</th><th>상품</th><th>수량</th>
+                        <th>결제 금액</th><th>주문 시각</th><th>현재 상태</th>
+                    </tr>
+                </thead>
+                <tbody id="orderBody">
+                    <tr class="empty-row"><td colspan="7">불러오는 중...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/orders.js"></script>
+</body>
+</html>

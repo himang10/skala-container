@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>SKALA 주문 관리 시스템</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <!-- 공통 상단 내비게이션 -->
+    <div th:replace="~{fragments/header :: topbar('home')}"></div>
+
+    <div class="container">
+        <div class="hero">
+            <h1>상품부터 배송까지,<br><span class="gradient">주문 관리 시스템</span></h1>
+            <p>주문 완료 → 결제 대기/완료 → 배송 대기/완료 흐름을 직접 실습해 보세요.</p>
+        </div>
+
+        <div class="menu-grid">
+            <a class="menu-card" th:href="@{/view/products}">
+                <div class="num">01</div>
+                <h3>상품 관리</h3>
+                <p>상품을 검색하고 등록·삭제합니다.</p>
+                <span class="go">바로가기 &rarr;</span>
+            </a>
+            <a class="menu-card" th:href="@{/view/users}">
+                <div class="num">02</div>
+                <h3>사용자 관리</h3>
+                <p>사용자를 검색하고 등록·삭제합니다.</p>
+                <span class="go">바로가기 &rarr;</span>
+            </a>
+            <a class="menu-card" th:href="@{/view/orders}">
+                <div class="num">03</div>
+                <h3>주문 관리</h3>
+                <p>상품을 주문하고 결제·배송 상태를 전환합니다.</p>
+                <span class="go">바로가기 &rarr;</span>
+            </a>
+        </div>
+    </div>
+</body>
+</html>

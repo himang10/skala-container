@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>사용자 관리</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <header class="topbar">
+        <div class="topbar-inner">
+            <a class="logo" href="/index.html">SK <span class="accent">AX</span> 주문 관리</a>
+            <nav>
+                <a href="/index.html">홈</a>
+                <a href="/products.html">상품 관리</a>
+                <a href="/users.html" class="active">사용자 관리</a>
+                <a href="/orders.html">주문 관리</a>
+                <a href="/system.html">시스템 정보</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <h1 class="page-title">사용자 관리</h1>
+        <p class="page-desc">사용자를 검색하고 등록·삭제할 수 있습니다.</p>
+
+        <!-- 사용자 검색 -->
+        <div class="card">
+            <h2>사용자 검색</h2>
+            <form class="form-row" id="searchForm">
+                <input type="text" id="searchKeyword" placeholder="이름 검색">
+                <button type="submit" class="btn btn-primary">검색</button>
+                <button type="button" class="btn btn-outline" id="resetBtn">전체 보기</button>
+            </form>
+        </div>
+
+        <!-- 사용자 등록 -->
+        <div class="card">
+            <h2>사용자 등록</h2>
+            <form class="form-row" id="createForm">
+                <input type="text" name="name" placeholder="이름" required>
+                <input type="email" name="email" placeholder="이메일" required>
+                <button type="submit" class="btn btn-primary">등록</button>
+            </form>
+        </div>
+
+        <!-- 사용자 목록 -->
+        <div class="card">
+            <h2>사용자 목록</h2>
+            <table>
+                <thead>
+                    <tr><th>ID</th><th>이름</th><th>이메일</th><th>관리</th></tr>
+                </thead>
+                <tbody id="userBody">
+                    <tr class="empty-row"><td colspan="4">불러오는 중...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/users.js"></script>
+</body>
+</html>

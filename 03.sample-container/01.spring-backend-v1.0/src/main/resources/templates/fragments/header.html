@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<body>
+    <!--
+        공통 상단 내비게이션 바 프래그먼트
+        사용법: <div th:replace="~{fragments/header :: topbar('orders')}"></div>
+        파라미터 active: 현재 페이지 이름 (home / products / users / orders)
+    -->
+    <header class="topbar" th:fragment="topbar(active)">
+        <div class="topbar-inner">
+            <a class="logo" th:href="@{/}">SK <span class="accent">AX</span> 주문 관리</a>
+            <nav>
+                <a th:href="@{/}"              th:classappend="${active == 'home'}     ? 'active'">홈</a>
+                <a th:href="@{/view/products}" th:classappend="${active == 'products'} ? 'active'">상품 관리</a>
+                <a th:href="@{/view/users}"    th:classappend="${active == 'users'}    ? 'active'">사용자 관리</a>
+                <a th:href="@{/view/orders}"   th:classappend="${active == 'orders'}   ? 'active'">주문 관리</a>
+            </nav>
+        </div>
+    </header>
+</body>
+</html>
