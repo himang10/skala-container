@@ -1,4 +1,4 @@
-package com.sk.skala.myapp.controller;
+package com.sk.skala.myapp.view;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
