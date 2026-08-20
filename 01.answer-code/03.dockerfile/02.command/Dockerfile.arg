@@ -1,0 +1,10 @@
+ARG UBUNTU_VERSION=22.04
+
+FROM ubuntu:${UBUNTU_VERSION}
+
+RUN apt-get update && apt-get install -y curl lsb-release
+
+ARG UBUNTU_VERSION
+
+RUN echo "현재 빌드에 사용된 ubuntu version: ${UBUNTU_VERSION}"
+

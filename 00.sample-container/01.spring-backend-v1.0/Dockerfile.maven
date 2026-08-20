@@ -1,0 +1,23 @@
+FROM ubuntu:24.04 AS builder
+
+RUN apt-get update && apt-get install -y openjdk-21-jdk maven \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /build
+
+COPY pom.xml .
+RUN mvn dependency:go-offline -q
+
+COPY src ./src
+RUN mvn package -DskipTests -q
+
+FROM eclipse-temurin:25-jre
+
+WORKDIR /app
+
+ENV SPRING_PROFILES_ACTIVE=local
+
+# builder 스테이지의 jar만 복사 (소스, JDK, Maven 캐시 제외)
+COPY --from=builder /build/target/*.jar app.jar
+
+ENTRYPOINT ["java", "-jar", "app.jar"]

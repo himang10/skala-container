@@ -1,0 +1,35 @@
+ARG UBUNTU_VERSION=22.04
+
+FROM ubuntu:${UBUNTU_VERSION}
+
+RUN apt-get update && apt-get install -y curl lsb-release nginx
+ARG UBUNTU_VERSION
+RUN echo "현재 빌드에 사용된 ubuntu version: ${UBUNTU_VERSION}"
+
+LABEL maintainer="himang10@gmail.com"
+LABEL description="SKALA Linux Version"
+
+EXPOSE 80/tcp
+EXPOSE 8080
+
+# nginx 기본 웹루트로 이동 후 index.html 복사 (default.conf 수정 없이 index.html만 교체)
+WORKDIR /var/www/html
+COPY index.html .
+
+# skala 그룹 및 사용자 추가
+RUN groupadd skala && \
+    useradd --create-home --shell /bin/bash --gid skala skala
+
+# nginx가 런타임에 쓰는 디렉터리 소유권을 skala로 변경 (root 소유 상태로는 mkdir 권한 오류 발생)
+RUN chown -R skala:skala /var/lib/nginx /var/log/nginx /run
+
+# skala는 80번(privileged) 포트 바인딩이 불가하므로 기본 사이트 설정을 8080으로 변경
+RUN sed -i \
+    -e 's/listen 80 default_server;/listen 8080 default_server;/' \
+    -e 's/listen \[::\]:80 default_server;/listen [::]:8080 default_server;/' \
+    /etc/nginx/sites-enabled/default
+
+# skala 사용자로 전환
+USER skala
+
+CMD ["nginx", "-g", "daemon off;"]
